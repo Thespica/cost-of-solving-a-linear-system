@@ -6,7 +6,7 @@
 \usepackage{microtype}
 \usepackage[hidelinks,pdfdisplaydoctitle]{hyperref}
 \hypersetup{pdftitle={Solving a dense linear system has the same arithmetic exponent as matrix multiplication},
-  pdfsubject={Exact solution of a rational linear system with one right-hand side}}
+  pdfsubject={The arithmetic cost of verifying a full solution and computing one coordinate}}
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
 \newcommand{\Q}{\mathbb{Q}}
@@ -25,45 +25,57 @@
 \vspace{0.3em}
 
 \begin{abstract}
-Solving a nonsingular rational \(n\times n\) system \(Ax=b\) with one right-hand
-side has the arithmetic exponent \(\omega\) of square matrix multiplication.
-We prove that the same exponent is necessary even when \(b=e_1\) is fixed
-in advance and the only output is \(x_1\). From any exact straight-line
-program of \(s\) gates for this scalar we construct a division-free circuit
-that computes a nonzero multiple of the generic determinant with at most
-\(3s\) multiplications. Andrews's bound for such multiples gives
-\(s\ge\floor{n/4}^{\omega}/18\) for every \(n\ge8\). In particular, the
-value \(\omega=9/4\) reported in the OpenAI preprint applies even to a
-single solution coordinate.
+A proposed solution to a dense \(n\times n\) linear system \(Ax=b\) can
+be checked in \(O(n^2)\) arithmetic operations by one matrix--vector
+product. How much work does it take to produce just the first coordinate?
+For nonsingular rational \(A\), computing that coordinate has the matrix
+multiplication exponent \(\omega\) in the exact straight-line model, even with
+\(b=e_1\) fixed in advance. A program of \(s\) gates for this scalar yields
+a nonzero multiple of the generic determinant using at most \(3s\)
+multiplications. Andrews's theorem then gives
+\(s\ge\floor{n/4}^{\omega}/18\) for \(n\ge8\). At the value \(\omega=9/4\)
+reported by OpenAI, producing one coordinate has strictly larger exponent
+than verifying the entire solution.
 \end{abstract}
 
-\section{One right-hand side}
+\section{Verifying a solution and computing one coordinate}
 
-Given a nonsingular \(n\times n\) matrix \(A\) over \(\Q\) and one vector
-\(b\in\Q^n\), compute \(x=A^{-1}b\). Computing the inverse would solve the system
-for all right-hand sides. Can one do better with just one? Allaire and
-Kaber list the equivalence with matrix multiplication for the full map
-\((A,b)\mapsto A^{-1}b\) \cite[Theorem~4.4.1]{allaire}. We ask how much
-of the output already forces that exponent.
+Given a nonsingular rational matrix \(A\), a vector \(b\), and a candidate
+\(\hat x\), form the residual \(r=A\hat x-b\). Over \(\Q\), one zero test
+on \(r^\top r\) decides whether \(\hat x\) is the solution. Sch\"onhage
+placed this quadratic verification bound alongside the question of whether
+solving a single system could be faster than matrix multiplication
+\cite[p.~149]{schoenhage}. Allaire and Kaber later listed the exponent
+equivalence for the full map \((A,b)\mapsto A^{-1}b\)
+\cite[Theorem~4.4.1]{allaire}. We ask what it costs to produce \(x_1\)
+from \(A\) alone when the right-hand side is fixed to \(e_1\).
 
 Let \(S(n)\) be the minimum gate count for the full solution, and \(C(n)\)
 the minimum for \(A\mapsto(A^{-1})_{11}\), the first coordinate when
-\(b=e_1\). Each gate performs one of \(+,-,\times,/\) on two available
-scalars. Rational constants and reuse are allowed. The gate sequence is
-fixed, and all divisions must be defined on every admissible input. Write
+\(b=e_1\). We use fixed sequences of binary gates \(+,-,\times,/\), with
+rational constants, register reuse, and divisions defined on every
+admissible input. A verifier may finish with a zero test. Write
 \(\sigma\) and \(\sigma_1\) for the respective exponents, where the exponent
 of a cost \(H\) is \(\inf\{t:H(n)=O(n^t)\}\). Let \(\omega\) denote the
 arithmetic exponent of square matrix multiplication over \(\Q\).
 
 \begin{theorem}\label{thm:main}
-The full solution and the single prescribed coordinate satisfy
+Verifying a supplied solution takes \(\Theta(n^2)\) gates in the worst
+case, even with \(b=e_1\). The full solution and the first coordinate satisfy
 \[
-                       \sigma=\sigma_1=\omega .
+   \sigma=\sigma_1=\omega,\qquad C(n)\ge\floor{n/4}^{\omega}/18
+   \quad(n\ge8).
 \]
-In each dimension \(n\ge8\), \(C(n)\ge\floor{n/4}^{\omega}/18\).
 \end{theorem}
 
 \begin{proof}
+The residual test gives the verification upper bound. For the lower bound
+take \(\hat x=(1,\ldots,1)^\top\). Subtracting the first row of the
+identity from each other row gives a nonsingular \(A_0\) with \(A_0\hat x=e_1\).
+A sufficiently small nonzero rational change to any single entry preserves
+nonsingularity and invalidates the candidate. All \(n^2\) entries must
+therefore feed the test, which requires at least \(n^2-1\) binary gates.
+
 Fixing \(b=e_1\) in a full solver and retaining its first output gives
 \(C(n)\le S(n)\). Put \(k=\floor{n/4}\). A program for the coordinate also
 works in dimension \(4k\) by feeding it \(\operatorname{diag}(Y,I_{n-4k})\).
@@ -93,78 +105,83 @@ using fast matrix multiplication for the block products. Thus
 \(S(n)=O(n^\tau)\) and \(\sigma\le\omega\).
 \end{proof}
 
-\newpage
 \section{The denominator of one coordinate}
 
-Let \(X=(x_{ij})\) be a matrix of independent variables, \(D=\det X\), and
-\(\Delta\) the cofactor of \(x_{11}\). Cramer's rule gives
-\((X^{-1})_{11}=\Delta/D\). The reduced denominator of this one entry is
-already the full determinant, up to a nonzero constant. The next lemma
-bounds the cost of recovering a multiple of it from an arbitrary program.
+For a generic matrix \(X=(x_{ij})\), let \(D=\det X\) and let \(\Delta\)
+be the cofactor of \(x_{11}\). By Cramer's rule \((X^{-1})_{11}=\Delta/D\).
+The reduced denominator of this one entry contains the full determinant.
 
 \begin{lemma}\label{lem:denominator}
-Let \(n\ge2\). If a straight-line program of \(s\) gates returns
-\((A^{-1})_{11}\) on every invertible rational \(n\times n\) input, then a
-division-free circuit with at most \(3s\) multiplication gates computes a
-nonzero element of the ideal \((D)\subset\Q[x_{ij}]\).
+For \(n\ge2\), an \(s\)-gate program for \((A^{-1})_{11}\) on every
+nonsingular rational \(n\times n\) input yields a division-free circuit
+for a nonzero multiple of \(D\) with at most \(3s\) multiplications.
 \end{lemma}
 
 \begin{proof}
-Represent each register by an unreduced pair of polynomials, initially
-\((x_{ij},1)\) or \((c,1)\). For operands represented by \((p,q)\)
-and \((r,t)\), the new register is
+Represent each register by an unreduced numerator and denominator, initially
+\((x_{ij},1)\) or \((c,1)\). On operands \((p,q)\) and \((r,t)\) the updates are
 \[
 \begin{array}{c@{\qquad}c@{\qquad}c}
   +\text{ or }- & \times & /\\[2pt]
   (pt\pm rq,\,qt) & (pr,\,qt) & (pt,\,qr).
 \end{array}
 \]
-Each gate costs at most three multiplications. Both components of every pair
-remain available for reuse. Let \((P,Q)\) be the final pair. On invertible
-rational inputs every intermediate denominator is nonzero by induction, so
-\(Q(I)\ne0\).
+Each gate costs at most three multiplications and preserves register reuse.
+Every denominator is nonzero on nonsingular inputs by induction, so the
+final pair \((P,Q)\) satisfies \(Q(I)\ne0\).
 
-Correctness gives \(PD-Q\Delta=0\) on invertible rational matrices.
-Multiplying by \(D\) gives an identity on \emph{all} rational matrices,
-including singular ones. Since \(\Q\) is infinite and \(D\ne0\), it follows
-that \(PD=Q\Delta\) in \(\Q[x_{ij}]\).
+Correctness gives \(PD=Q\Delta\) on nonsingular rational matrices. Thus
+\(D(PD-Q\Delta)\) vanishes on all rational matrices. Since \(\Q\) is infinite
+and \(D\ne0\), \(PD=Q\Delta\) as polynomials.
 
-Suppose \(g\) divides both \(D\) and \(\Delta\). Degrees in a given variable
-add under multiplication of nonzero polynomials. Since \(\Delta\) omits the
-first row, so does \(g\). Replace that row by \(e_j^\top\). This fixes \(g\)
-and turns \(D\) into the nonzero signed minor omitting column \(j\). Its
-divisor \(g\) is therefore independent of column \(j\). This holds for
-every \(j\), so \(g\) is constant. Unique factorization and \(PD=Q\Delta\)
-now yield \(D\mid Q\).
+A common divisor \(g\) of \(D\) and \(\Delta\) omits the first row, since
+\(\Delta\) does. Replacing that row by \(e_j^\top\) shows that \(g\) divides
+a nonzero minor omitting column \(j\). Degrees add under multiplication,
+so \(g\) omits every column. It is constant, and unique factorization in
+\(\Q[x_{ij}]\) gives \(D\mid Q\).
 \end{proof}
 
-\paragraph{The value \(9/4\).}
-Substituting the value of \(\omega\) in the OpenAI preprint
-\cite[Theorem~1.1]{openai} gives \(C(n)\ge \floor{n/4}^{9/4}/18
-\ge n^{9/4}/2304\) for \(n\ge8\), since \(\floor{n/4}\ge n/8\).
+\medskip\noindent\textbf{Recovering the full solution.}\enspace
+With unknowns ordered as \((t,y,z)\), the equations \(z=1\), \(Ay+bz=0\),
+and \(t+u^\top y=0\) form a nonsingular system of size \(n+2\) with right-hand
+side \(e_1\). Its first coordinate is \(t=u^\top A^{-1}b\). Reverse
+differentiation of the program for \(t\) at \(u=0\) recovers the full vector
+\(\nabla_u t=A^{-1}b\) at constant arithmetic overhead \cite[Theorem~2]{baur}.
+
+\medskip\noindent\textbf{The value \(9/4\).}\enspace
+Verification and solution have the same exponent exactly when \(\omega=2\).
+The value reported in the OpenAI preprint \cite[Theorem~1.1]{openai}
+gives \(C(n)\ge \floor{n/4}^{9/4}/18 \ge n^{9/4}/2304\) for \(n\ge8\),
+since \(\floor{n/4}\ge n/8\).
 Permuting rows and columns gives the same bound for any prescribed entry
 of \(A^{-1}\). It also applies to the exact optimal value of
 \(\min\{x_1:Ax=e_1,\ x\in\Q^n\}\), whose feasible set is a singleton.
 
-\paragraph{Formal verification.}
-The Lean~4.19.0 proof verifies the denominator construction starting from
-correctness on all nonsingular rational inputs. Its numerical lower bound
-takes Andrews's determinant-ideal bound and the pointwise border-rank
-bound in \cite[Corollary~1.2]{openai} as hypotheses. At revision
-\texttt{b81e394}, \texttt{./scripts/verify} builds the proof and audits its axioms.
+\medskip\noindent\textbf{Formal verification.}\enspace
+Lean~4.19.0 verifies the denominator construction on nonsingular rational
+inputs. The numerical proof takes Andrews's bound and the pointwise
+border-rank bound of \cite[Corollary~1.2]{openai} as hypotheses. At revision \texttt{b81e394},
+\texttt{./scripts/verify} builds the proof and audits its axioms.
 
 \begin{thebibliography}{9}
-\setlength{\itemsep}{0.12em}
+\small
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
 \bibitem{allaire} G.~Allaire and S.~M. Kaber.
 \href{https://doi.org/10.1007/978-0-387-68918-0}{\emph{Numerical Linear Algebra}}.
 Springer, 2008, Theorem~4.4.1.
 \bibitem{andrews} R.~Andrews. \emph{On matrix multiplication and polynomial
 identity testing}. FOCS 2022. \href{https://arxiv.org/abs/2208.01078}{arXiv:2208.01078}.
+\bibitem{baur} W.~Baur and V.~Strassen.
+\href{https://doi.org/10.1016/0304-3975(83)90110-X}{\emph{The complexity of partial derivatives}}.
+Theoretical Computer Science 22 (1983), 317--330.
 \bibitem{bini} D.~Bini. \href{https://doi.org/10.1007/BF02575865}{\emph{Relations between
 exact and approximate bilinear algorithms. Applications}}. Calcolo 17 (1980), 87--97.
 \bibitem{bunch} J.~R. Bunch and J.~E. Hopcroft. \href{https://doi.org/10.1090/S0025-5718-1974-0331751-8}{\emph{Triangular factorization and inversion by fast matrix multiplication}}.
 Mathematics of Computation 28 (1974), 231--236.
 \bibitem{openai} OpenAI. \emph{The matrix multiplication exponent is nine fourths}.
 \href{https://github.com/openai/math/blob/main/preprints/The-matrix-multiplication-exponent-is-nine-fourths-November-24-2026/paper.pdf}{Preprint}, 24 November 2026.
+\bibitem{schoenhage} A.~Sch\"onhage. \href{https://www.mathunion.org/fileadmin/ICM/Proceedings/ICM1986.1/ICM1986.1.ocr.pdf}{\emph{Equation solving in terms of computational complexity}}.
+Proc.\ International Congress of Mathematicians (Berkeley, 1986), vol.~1, 131--153.
 \end{thebibliography}
 \end{document}
