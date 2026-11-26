@@ -1,1 +1,1 @@
-import SingleCoordinate.LowerBound
+import SingleCoordinate.Exponent

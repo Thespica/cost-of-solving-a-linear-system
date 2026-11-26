@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+if [ -x .lake/toolchain/bin/lake ]; then
+  PATH="$PWD/.lake/toolchain/bin:$PATH"
+  export PATH
+fi
+lake build
+lake env lean Checks.lean

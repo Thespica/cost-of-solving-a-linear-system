@@ -1,4 +1,4 @@
-import SingleCoordinate.Circuits
+import SingleCoordinate.Programs
 import SingleCoordinate.Matrix
 import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 import Mathlib.Tactic.FieldSimp
@@ -12,8 +12,20 @@ open scoped Matrix
 
 abbrev RF (K : Type*) [Field K] (d : ℕ) := FractionRing (MatrixPoly K d)
 
+abbrev MatrixInput (K : Type*) (d : ℕ) := K ⊕ MatrixVars d
+
+noncomputable def polynomialInput (K : Type*) [Field K] (d : ℕ) :
+    MatrixInput K d → MatrixPoly K d := Sum.elim C X
+
 def inputs (K : Type*) [Field K] (d : ℕ) : Set (MatrixPoly K d) :=
-  Set.range (C : K → MatrixPoly K d) ∪ Set.range (X : MatrixVars d → MatrixPoly K d)
+  Set.range (polynomialInput K d)
+
+noncomputable def rationalInput (K : Type*) [Field K] (d : ℕ) :
+    MatrixInput K d → RF K d := algebraMap _ _ ∘ polynomialInput K d
+
+theorem range_rationalInput (K : Type*) [Field K] (d : ℕ) :
+    Set.range (rationalInput K d) = algebraMap _ (RF K d) '' inputs K d :=
+  Set.range_comp _ _
 
 noncomputable def matrixOverFractions (K : Type*) [Field K] (d : ℕ) :
     Matrix (Fin d) (Fin d) (RF K d) :=
@@ -56,9 +68,9 @@ theorem firstCoordinate_of_solution {K : Type*} [Field K] {n : ℕ}
 Here rank k denotes the border rank of square matrix multiplication of side k.
 The exact division-free polynomial program supplies an upper bound on its border cost. -/
 def AndrewsBound (K : Type*) [Field K] (rank : ℕ → ℕ) : Prop :=
-  ∀ (d : ℕ) (T : Set (MatrixPoly K d)) (m : ℕ) (q : MatrixPoly K d),
-    4 ≤ d → PolyRun (inputs K d) T m → q ∈ T → q ≠ 0 → detPoly K d ∣ q →
-    rank (d / 4) ≤ 6*m
+  ∀ (d : ℕ) {r : ℕ} (p : Program PolyOp (MatrixInput K d) r) (out : Ref (MatrixInput K d) r),
+    let q := p.value PolyOp.eval (polynomialInput K d) out
+    4 ≤ d → q ≠ 0 → detPoly K d ∣ q → rank (d / 4) ≤ 6 * p.cost PolyOp.weight
 
 /-- The pointwise matrix multiplication border-rank bound, raised to the fourth power. -/
 def MatrixRankBound (rank : ℕ → ℕ) : Prop := ∀ k, 2 ≤ k → k^9 ≤ (rank k)^4
@@ -71,7 +83,7 @@ theorem extractDenominator {K : Type*} [Field K] {n s : ℕ} {S : Set (RF K (n+1
     ∃ T m q, PolyRun (inputs K (n+1)) T m ∧ m ≤ 3*s ∧
       q ∈ T ∧ q ≠ 0 ∧ detPoly K (n+1) ∣ q := by
   have hone : (1 : MatrixPoly K (n+1)) ∈ inputs K (n+1) :=
-    Or.inl ⟨1, map_one _⟩
+    ⟨Sum.inl (1 : K), map_one _⟩
   obtain ⟨T, m, gr, bound, reps⟩ := clearDivisions hone run
   obtain ⟨p, _, q, hq, qne, eqn⟩ := reps _ out
   refine ⟨T, m, q, gr, bound, hq, qne, ?_⟩
@@ -84,7 +96,7 @@ theorem extractDenominator {K : Type*} [Field K] {n s : ℕ} {S : Set (RF K (n+1
     apply inj
     rw [map_mul, map_mul, eqn]
     field_simp
-    <;> ring
+    ring
   have hdiv : detPoly K (n+1) ∣ q * cofactor K (0 : Fin (n+1)) :=
     cross ▸ dvd_mul_left _ _
   exact (det_cofactor_relPrime (K := K) (n := n)).dvd_of_dvd_mul_right hdiv
@@ -96,7 +108,11 @@ theorem singleCoordinate_lower {K : Type*} [Field K] {rank : ℕ → ℕ}
     (out : firstCoordinate K n ∈ S) :
     ((n+1)/4)^9 ≤ (18*s)^4 := by
   obtain ⟨T, m, q, gr, hm, hq, qne, dvd⟩ := extractDenominator run out
-  have a := andrews (n+1) T m q (by omega) gr hq qne dvd
+  obtain ⟨r, p, cost, regs⟩ := program_of_polyRun (polynomialInput K (n+1)) gr
+  obtain ⟨o, val⟩ := regs q hq
+  have a := andrews (n+1) p o (by omega) (by simpa only [val] using qne)
+    (by simpa only [val] using dvd)
+  rw [cost] at a
   exact (matrixRank _ (by omega)).trans (Nat.pow_le_pow_left (by omega) 4)
 
 theorem singleCoordinate_dimension_lower {K : Type*} [Field K] {rank : ℕ → ℕ}
@@ -111,5 +127,17 @@ theorem singleCoordinate_dimension_lower {K : Type*} [Field K] {rank : ℕ → �
     (n+1)^9 ≤ (8*((n+1)/4))^9 := Nat.pow_le_pow_left hdim 9
     _ = 8^9 * ((n+1)/4)^9 := mul_pow _ _ _
     _ ≤ 8^9 * (18*s)^4 := Nat.mul_le_mul_left _ sharp
+
+/-- A lower bound for literal straight-line code with bounded register addresses.
+The number s is the number of all four-arithmetic gates in the input program. -/
+theorem program_lower {K : Type*} [Field K] {rank : ℕ → ℕ}
+    (andrews : AndrewsBound K rank) (matrixRank : MatrixRankBound rank)
+    {n s : ℕ} (dim : 8 ≤ n+1) (program : Program RatOp (MatrixInput K (n+1)) s)
+    (out : Ref (MatrixInput K (n+1)) s) (legal : program.legal (rationalInput K (n+1)))
+    (correct : program.value RatOp.eval (rationalInput K (n+1)) out = firstCoordinate K n) :
+    ((n+1)/4)^9 ≤ (18*s)^4 := by
+  obtain ⟨S, run, available⟩ := program.toRatRun (rationalInput K (n+1)) legal
+  rw [range_rationalInput] at run
+  exact singleCoordinate_lower andrews matrixRank dim run (correct ▸ available out)
 
 end SingleCoordinate
