@@ -5,10 +5,10 @@
 \usepackage[margin=1.04in,top=0.88in,bottom=0.90in]{geometry}
 \usepackage{microtype}
 \usepackage[hidelinks,pdfdisplaydoctitle]{hyperref}
-\hypersetup{pdftitle={A matrix multiplication lower bound for one inverse entry},
-  pdfsubject={A reduction from a rational solution coordinate to a nonzero determinant multiple}}
-\newtheorem{proposition}{Proposition}
-\newtheorem{corollary}[proposition]{Corollary}
+\hypersetup{pdftitle={The exponent for solving a dense linear system is nine fourths},
+  pdfsubject={The arithmetic exponent of exact dense linear system solving over the rationals}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
 \newcommand{\Q}{\mathbb{Q}}
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\rk}{\underline{R}}
@@ -20,135 +20,135 @@
 
 \begin{document}
 \begin{center}
-  {\LARGE\bfseries A matrix multiplication lower bound for one inverse entry\par}
+  {\LARGE\bfseries The exponent for solving a dense linear system is nine fourths\par}
 \end{center}
-\vspace{0.35em}
+\vspace{0.3em}
 
 \begin{abstract}
-Suppose a straight-line program of \(s\) arithmetic gates returns the first
-coordinate of \(A^{-1}e_1\) for every invertible rational \(n\times n\) matrix
-\(A\). Its output denominator gives a division-free circuit for a nonzero
-multiple of the generic determinant using at most \(3s\) multiplications.
-Andrews's theorem on determinantal ideals therefore transfers matrix
-multiplication border-rank lower bounds to a single inverse entry. The
-pointwise bound claimed in OpenAI's November 2026 preprint would imply
-\(s=\Omega(n^{9/4})\). The reduction, including an explicit constant, is
-verified in Lean with the two literature results as hypotheses.
+Assuming the matrix multiplication bounds of OpenAI, the arithmetic exponent
+for solving a dense rational linear system with one right-hand side is \(9/4\).
+We count exact scalar operations in straight-line programs. The upper bound
+computes the full solution. The lower bound already holds when the right-hand
+side is fixed and only the first coordinate is requested. From any program
+of \(s\) gates for this coordinate we obtain a nonzero multiple of the generic
+determinant using at most \(3s\) multiplications. Andrews's theorem on
+determinantal ideals supplies the lower bound for that multiple.
 \end{abstract}
 
-\section*{Extracting a determinant multiple}
+\section{The exponent for solving a linear system}
 
-For a two-by-two system with right-hand side \(e_1\), Cramer's rule gives
+Given an invertible \(n\times n\) matrix \(A\) over \(\Q\) and one vector
+\(b\in\Q^n\), compute the unique \(x\) satisfying \(Ax=b\).
+Fast matrix multiplication gives an upper bound by computing \(A^{-1}\).
+The inverse contains solutions for \(n\) independent right-hand sides.
+Can a program for just one right-hand side use a smaller exponent?
+
+Let \(S(n)\) be the minimum number of gates in a program solving every such
+system of size \(n\). A gate adds, subtracts, multiplies, or divides two
+available scalars. Constants are rational, registers can be reused, and the
+sequence of gates and operands is fixed before \(A,b\) are given. All divisions
+must be defined on every allowed input. The solving exponent is
+\(\sigma_{\Q}=\inf\{t:S(n)=O(n^t)\}\).
+Write \(\rk(k)\) for the complex border rank of the tensor for multiplying
+two \(k\times k\) matrices.
+
+\begin{theorem}\label{thm:main}
+Assume, as in \cite[Theorem~1.1 and Corollary~1.2]{openai}, that the
+multiplication exponent over \(\Q\) is at most \(9/4\) and that
+\(\rk(k)\ge k^{9/4}\) for every \(k\ge2\). Then
 \[
-  \begin{pmatrix}a&b\\c&d\end{pmatrix}x=e_1
-  \quad\Longrightarrow\quad x_1=\frac{d}{ad-bc}
-  \qquad(ad-bc\ne0).
+                         \sigma_{\Q}=\tfrac94.
 \]
-For any exact straight-line program computing the same scalar, \(ad-bc\)
-divides the denominator obtained by clearing fractions gate by gate.
-The same divisibility holds in every dimension.
-
-Fix \(e_1=(1,0,\ldots,0)^\top\). A straight-line program reads the entries of
-\(A\) and rational constants. Each gate applies \(+\), \(-\), \(\times\), or
-\(/\) to two previously available values. Both operands are fixed in advance
-and may be reused. On every invertible rational input, all divisions must
-be defined and the output must equal \((A^{-1}e_1)_1=(A^{-1})_{11}\).
-
-\begin{proposition}\label{prop:denominator}
-Let \(X=(x_{ij})\) be a generic \(n\times n\) matrix, with \(n\ge2\), and
-\(D=\det X\). From a program as above with \(s\) gates one can construct a
-division-free circuit over \(\Q\) with at most \(3s\) multiplication gates
-whose output is a nonzero multiple of \(D\) in \(\Q[x_{ij}]\).
-\end{proposition}
+For \(n\ge8\), even a program returning only \(x_1\) for \(b=e_1\) requires
+at least \(n^{9/4}/2304\) gates.
+\end{theorem}
 
 \begin{proof}
-Store each register as a pair of polynomials giving its numerator and
-denominator, initially \((x_{ij},1)\) or \((c,1)\). For operands \(p/q\)
-and \(r/t\), the new pairs are
+Fix \(b=e_1\) in a solver and retain its first output. This gives a program
+for \((A^{-1})_{11}\) with at most the original gate count. For any program
+of size \(s\) for this scalar, Lemma~\ref{lem:denominator} gives a division-free
+circuit for a nonzero multiple of the generic determinant, using at most
+\(3s\) multiplications. By Andrews's theorem \cite[Theorem~3.4]{andrews},
+the border multiplicative complexity of every such multiple over \(\C\)
+is at least \(\rk(\floor{n/4})/6\). A rational circuit is also a complex
+circuit. Hence
+\[
+           s\ \ge\ \frac{\rk(\floor{n/4})}{18}
+             \ \ge\ \frac{\floor{n/4}^{9/4}}{18}
+             \ \ge\ \frac{n^{9/4}}{2304}.
+\]
+Only the second inequality uses the claimed border-rank bound. The last
+uses \(\floor{n/4}\ge n/8\) and \(18\cdot8^{9/4}\le2304\).
+
+For the upper bound, fix \(\tau>9/4\). Matrix products take \(O(n^\tau)\)
+gates by hypothesis. Form \(B=A^\top A\) and return \(B^{-1}(A^\top b)\).
+The matrix \(B\) is positive definite, as are its leading principal block
+and the corresponding Schur complement. Block inversion \cite{bunch} thus
+uses a fixed sequence of legal divisions on every input. After padding with
+an identity block to a power of two, the inversion cost satisfies
+\(T(n)\le2T(n/2)+O(n^\tau)\). This gives \(S(n)=O(n^\tau)\) for every
+\(\tau>9/4\).
+\end{proof}
+
+\newpage
+\section{The denominator of one coordinate}
+
+Let \(X=(x_{ij})\) be a matrix of independent variables, \(D=\det X\), and
+\(\Delta\) the cofactor of \(x_{11}\). Cramer's rule gives
+\((X^{-1})_{11}=\Delta/D\). We recover a multiple of \(D\) from the
+arithmetic performed by a program for this one scalar.
+
+\begin{lemma}\label{lem:denominator}
+Let \(n\ge2\). If a straight-line program of \(s\) gates returns
+\((A^{-1})_{11}\) on every invertible rational \(n\times n\) input, then a
+division-free circuit with at most \(3s\) multiplication gates computes a
+nonzero element of the ideal \((D)\subset\Q[x_{ij}]\).
+\end{lemma}
+
+\begin{proof}
+Represent each register by an unreduced pair of polynomials, initially
+\((x_{ij},1)\) or \((c,1)\). For operands represented by \((p,q)\)
+and \((r,t)\), the new register is
 \[
 \begin{array}{c@{\qquad}c@{\qquad}c}
   +\text{ or }- & \times & /\\[2pt]
   (pt\pm rq,\,qt) & (pr,\,qt) & (pt,\,qr).
 \end{array}
 \]
-Each source gate contributes at most three multiplications.
-Both polynomials for each register remain available to every subsequent gate.
-Write \((P,Q)\) for the final pair. At every invertible rational matrix all
-constructed denominators are nonzero, by induction on the gates.
-In particular \(Q(I)\ne0\).
+Each gate costs at most three multiplications. Both components of every pair
+remain available for reuse. Let \((P,Q)\) be the final pair. On invertible
+rational inputs every intermediate denominator is nonzero by induction, so
+\(Q(I)\ne0\).
 
-Let \(\Delta\) be the cofactor of \(x_{11}\). Cramer's rule gives
-\((A^{-1})_{11}=\Delta(A)/D(A)\), so \(H=PD-Q\Delta\) vanishes on all
-invertible rational matrices. The polynomial \(DH\) vanishes on \emph{all}
-rational matrices. Since \(\Q\) is infinite and \(D\ne0\), we have
-\(PD=Q\Delta\) as a polynomial identity.
+Correctness gives \(PD-Q\Delta=0\) on invertible rational matrices.
+Multiplying by \(D\) gives an identity on \emph{all} rational matrices,
+including singular ones. Since \(\Q\) is infinite and \(D\ne0\), it follows
+that \(PD=Q\Delta\) in \(\Q[x_{ij}]\).
 
-To see that \(D\) and \(\Delta\) are relatively prime, take a common divisor
-\(g\). Degrees in each variable add under multiplication of nonzero polynomials.
-Since \(g\mid\Delta\), \(g\) has degree zero in every first-row variable. Replacing the
-first row by \(e_j^\top\) therefore fixes \(g\) and turns \(D\) into the
-nonzero signed minor omitting column \(j\). Thus \(g\) has degree zero in
-every variable of column \(j\), for every \(j\). It is a nonzero constant.
-Unique factorization now gives \(D\mid Q\), as required.
+Suppose \(g\) divides both \(D\) and \(\Delta\). Degrees in a given variable
+add under multiplication of nonzero polynomials. Since \(\Delta\) omits the
+first row, so does \(g\). Replace that row by \(e_j^\top\). This fixes \(g\)
+and turns \(D\) into the nonzero signed minor omitting column \(j\). Its
+divisor \(g\) is therefore independent of column \(j\). This holds for
+every \(j\), so \(g\) is constant. Unique factorization and \(PD=Q\Delta\)
+now yield \(D\mid Q\).
 \end{proof}
 
-\newpage
-\section*{Transferring the matrix multiplication lower bound}
-
-Write \(\rk(k)\) for the border rank over \(\C\) of the \(k\times k\) matrix
-multiplication tensor, the least number of rank-one summands whose sums
-can approximate it arbitrarily closely. Over \(\C\), Andrews's theorem
-gives border multiplicative complexity at least \(\rk(\floor{r/4})/6\) for
-every nonzero polynomial in the ideal generated by the \(r\times r\) minors
-of a generic matrix \cite[Theorem~3.4]{andrews}. For a square matrix and \(r=n\), this is the
-principal ideal \((D)\). An exact rational circuit is also a complex circuit,
-and its multiplication count bounds its border multiplicative complexity from
-above.
-
-\begin{corollary}\label{cor:lower}
-For every \(n\ge8\), any program computing the first coordinate as above satisfies
-\[
-        s\ \ge\ \frac{\rk(\floor{n/4})}{18}.
-\]
-If \(\rk(k)\ge k^{9/4}\) for all \(k\ge2\), as asserted in the OpenAI
-preprint \cite[Corollary~1.2]{openai}, then
-\(s\ge\floor{n/4}^{9/4}/18\), and in particular \(s\ge n^{9/4}/2304\).
-\end{corollary}
-
-\begin{proof}
-Apply Andrews's theorem to \(Q\) from Proposition~\ref{prop:denominator}.
-Its circuit uses at most \(3s\) multiplications, giving
-\(\rk(\floor{n/4})\le6(3s)\). For the numerical bound, use
-\(\floor{n/4}\ge n/8\) and \(18\cdot8^{9/4}\le2304\).
-\end{proof}
-
-\paragraph{The upper bound in the same model.}
-Suppose rational \(n\times n\) matrices can be multiplied in \(O(n^\tau)\)
-gates by fixed programs for some \(\tau>2\). The classical block inversion
-recursion \cite{bunch} gives the same upper bound here, even with a fixed
-sequence of gates. Form \(B=A^\top A\) and compute \(B^{-1}A^\top e_1\).
-The leading diagonal block of the positive definite matrix \(B\) and its
-Schur complement are both positive definite. Both recursive inversions are
-therefore legal on every promised input. Padding to a power of two with
-an identity block gives the recurrence \(T(n)\le2T(n/2)+O(n^\tau)\).
-Together with the multiplication upper bound in \cite{openai}, the
-corollary would make \(9/4\) the infimum of achievable exponents for this
-single coordinate.
-
-\paragraph{Relation to exact linear programming.}
-The equality-constrained program \(\min\{x_1:Ax=e_1,\ x\in\Q^n\}\) has a
-unique feasible point for invertible \(A\). Its optimal value is precisely
-the scalar in Proposition~\ref{prop:denominator}. Thus the same lower bound
-applies to a fixed straight-line program that returns the exact value on this
-family.
+\paragraph{Exact linear programming.}
+On the family \(\min\{x_1:Ax=b,\ x\in\Q^n\}\) with \(A\) invertible,
+the optimal value is the first coordinate of the unique solution.
+The finite-size lower bound in Theorem~\ref{thm:main} therefore also
+applies to a fixed straight-line program computing the exact optimal value
+on this family.
 
 \paragraph{Formal verification.}
-The accompanying Lean~4.19.0 development (revision \texttt{b81e394}) proves Proposition~\ref{prop:denominator}
-and the lower bound of Corollary~\ref{cor:lower}. The theorem
-\texttt{single\_coordinate\_nine\_fourths} takes the determinant-ideal bound
-and the pointwise border-rank bound as explicit parameters. Its correctness
-hypothesis quantifies over concrete invertible inputs. The repository command
-\texttt{./scripts/verify} builds the proof and audits its axiom dependencies.
+The Lean~4.19.0 development at revision \texttt{b81e394} verifies
+Lemma~\ref{lem:denominator} and the finite-size lower bound. The declaration
+\texttt{single\_coordinate\_nine\_fourths} takes Andrews's determinant-ideal
+bound and the pointwise border-rank bound as explicit parameters.
+Its input hypothesis quantifies over all invertible rational matrices
+when the base field is specialized to \(\Q\).
+The command \texttt{./scripts/verify} builds the proof and audits its axioms.
 
 \begin{thebibliography}{9}
 \setlength{\itemsep}{0.12em}

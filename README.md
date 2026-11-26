@@ -1,6 +1,6 @@
-# 一个线性方程组解坐标的算术复杂度
+# 求解稠密线性方程组的算术复杂度指数是 $9/4$
 
-给定可逆的 $d\times d$ 矩阵 $A$，只要求返回 $Ax=e_1$ 的第一个坐标。这个仓库用 Lean 4 验证一个条件下界。把下面两条文献定理作为参数，对于每个 $d\ge 8$，任何在所有可逆输入上精确答对的固定四则运算程序，其门数 $s$ 满足
+给定可逆的稠密有理矩阵 $A$ 和一个右端 $b$，目标是精确计算 $Ax=b$ 的全部解坐标。采用 OpenAI 预印本的矩阵乘法上下界，固定四则运算程序的求解指数为 $9/4$。论文用分块求逆给出上界。仓库用 Lean 4 验证下界，它甚至适用于固定 $b=e_1$、只输出 $x_1$ 的程序。把下面两条文献定理作为参数，对于每个 $d\ge 8$，任何在所有可逆输入上精确答对的固定四则运算程序，其门数 $s$ 满足
 
 $$
 \lfloor d/4\rfloor^9\le (18s)^4,
@@ -10,7 +10,7 @@ $$
 
 门数包括加、减、乘、除。程序可以使用底域中的任意常数，可以多次读取同一寄存器。每次除法都要求除数非零。程序是固定的直线程序，每个门的运算和两个操作数在读入矩阵前就已确定。具体输入版本覆盖无限域，包括有理数域。Lean 用 `n+1` 表示维数，使第一个坐标始终有定义。
 
-[英文短文（PDF）](output/pdf/single-coordinate.pdf) · [LaTeX 源码](paper/single-coordinate.tex)
+[The exponent for solving a dense linear system is nine fourths（PDF）](output/pdf/single-coordinate.pdf) · [LaTeX 源码](paper/single-coordinate.tex)
 
 ## 两条外部定理
 
