@@ -5,7 +5,9 @@
 \usepackage[margin=1.04in,top=0.88in,bottom=0.90in]{geometry}
 \usepackage{microtype}
 \usepackage[hidelinks,pdfdisplaydoctitle]{hyperref}
+\newcommand{\paperauthor}{Zhe Wang}
 \hypersetup{pdftitle={Solving a dense linear system has the same arithmetic exponent as matrix multiplication},
+  pdfauthor={\paperauthor},
   pdfsubject={The arithmetic cost of verifying a full solution and computing one coordinate}}
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
@@ -18,11 +20,12 @@
 \frenchspacing
 
 \begin{document}
-\begin{center}
+{\centering
   {\LARGE\bfseries Solving a dense linear system has the same\\
     arithmetic exponent as matrix multiplication\par}
-\end{center}
-\vspace{0.3em}
+  \smallskip
+  {\large\paperauthor\par}
+}
 
 \begin{abstract}
 One matrix--vector product checks a proposed solution to a dense
