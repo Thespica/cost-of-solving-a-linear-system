@@ -1,6 +1,6 @@
 # 求解稠密线性方程组与矩阵乘法具有相同的算术指数
 
-[Solving a dense linear system has the same arithmetic exponent as matrix multiplication（当前论文）](paper/single-coordinate.tex) · [较早版本的 PDF（e22a041）](output/pdf/single-coordinate.pdf)
+[Solving a dense linear system has the same arithmetic exponent as matrix multiplication（PDF）](output/pdf/single-coordinate.pdf) · [LaTeX 源码](paper/single-coordinate.tex)
 
 给定可逆的稠密有理矩阵 $A$、右端 $b$ 和完整候选解 $\hat x$，做一次矩阵向量乘法就能核对 $A\hat x=b$。即使把右端固定为 $e_1$，在本文的精确有理直线程序模型中，验证完整候选解的最坏成本是 $\Theta(n^2)$，而只给 $A$、要求算出第一个解坐标 $x_1$，其算术指数就是矩阵乘法指数 $\omega$。因此当 $\omega>2$ 时，算出一个坐标比验证整个解需要更高的指数。Schönhage 在 1986 年的国际数学家大会报告中并列讨论了验解和求解。Allaire 和 Kaber 的定理 4.4.1 列出了完整求解与矩阵乘法的等价关系。[Schönhage，报告第 149 页](https://www.mathunion.org/fileadmin/ICM/Proceedings/ICM1986.1/ICM1986.1.ocr.pdf) · [Allaire 与 Kaber](https://doi.org/10.1007/978-0-387-68918-0)
 
