@@ -25,17 +25,15 @@
 \vspace{0.3em}
 
 \begin{abstract}
-A proposed solution to a dense \(n\times n\) linear system \(Ax=b\) can
-be checked in \(O(n^2)\) arithmetic operations by one matrix--vector
-product. How much work does it take to produce just the first coordinate?
-For nonsingular rational \(A\), computing that coordinate has the matrix
-multiplication exponent \(\omega\) in the exact straight-line model, even with
-\(b=e_1\) fixed in advance. A program of \(s\) gates for this scalar yields
-a nonzero multiple of the generic determinant using at most \(3s\)
-multiplications. Andrews's theorem then gives
-\(s\ge\floor{n/4}^{\omega}/18\) for \(n\ge8\). At the value \(\omega=9/4\)
-reported by OpenAI, producing one coordinate has strictly larger exponent
-than verifying the entire solution.
+One matrix--vector product checks a proposed solution to a dense
+\(n\times n\) system \(Ax=b\) in \(O(n^2)\) arithmetic operations.
+How much work does it take to compute just the first coordinate?
+For nonsingular rational \(A\) and fixed \(b=e_1\), its exact straight-line
+complexity has the matrix multiplication exponent \(\omega\).
+The proof converts an \(s\)-gate program for this coordinate into a
+division-free program that computes a nonzero multiple of the generic
+determinant with at most \(3s\) multiplications. This yields
+\(s\ge\floor{n/4}^{\omega}/18\) for \(n\ge8\).
 \end{abstract}
 
 \section{Verifying a solution and computing one coordinate}
@@ -47,8 +45,7 @@ placed this quadratic verification bound alongside the question of whether
 solving a single system could be faster than matrix multiplication
 \cite[p.~149]{schoenhage}. Allaire and Kaber later listed the exponent
 equivalence for the full map \((A,b)\mapsto A^{-1}b\)
-\cite[Theorem~4.4.1]{allaire}. We ask what it costs to produce \(x_1\)
-from \(A\) alone when the right-hand side is fixed to \(e_1\).
+\cite[Theorem~4.4.1]{allaire}.
 
 Let \(S(n)\) be the minimum gate count for the full solution, and \(C(n)\)
 the minimum for \(A\mapsto(A^{-1})_{11}\), the first coordinate when
@@ -134,11 +131,12 @@ Correctness gives \(PD=Q\Delta\) on nonsingular rational matrices. Thus
 \(D(PD-Q\Delta)\) vanishes on all rational matrices. Since \(\Q\) is infinite
 and \(D\ne0\), \(PD=Q\Delta\) as polynomials.
 
-A common divisor \(g\) of \(D\) and \(\Delta\) omits the first row, since
-\(\Delta\) does. Replacing that row by \(e_j^\top\) shows that \(g\) divides
-a nonzero minor omitting column \(j\). Degrees add under multiplication,
-so \(g\) omits every column. It is constant, and unique factorization in
-\(\Q[x_{ij}]\) gives \(D\mid Q\).
+Let \(g\) divide both \(D\) and \(\Delta\). Since degrees add under
+multiplication and \(\Delta\) is independent of the first row, so is \(g\).
+Replacing that row by \(e_j^\top\) leaves \(g\) unchanged and turns \(D\)
+into a nonzero cofactor independent of column \(j\). The same degree
+argument shows that \(g\) is independent of every column, hence constant.
+Unique factorization in \(\Q[x_{ij}]\) now gives \(D\mid Q\).
 \end{proof}
 
 \medskip\noindent\textbf{Recovering the full solution.}\enspace
@@ -149,19 +147,18 @@ differentiation of the program for \(t\) at \(u=0\) recovers the full vector
 \(\nabla_u t=A^{-1}b\) at constant arithmetic overhead \cite[Theorem~2]{baur}.
 
 \medskip\noindent\textbf{The value \(9/4\).}\enspace
-Verification and solution have the same exponent exactly when \(\omega=2\).
-The value reported in the OpenAI preprint \cite[Theorem~1.1]{openai}
+Substituting \(\omega=9/4\) as reported in the OpenAI preprint \cite[Theorem~1.1]{openai}
 gives \(C(n)\ge \floor{n/4}^{9/4}/18 \ge n^{9/4}/2304\) for \(n\ge8\),
-since \(\floor{n/4}\ge n/8\).
+since \(\floor{n/4}\ge n/8\). At this value, computing one coordinate
+has a strictly larger exponent than checking the full solution.
 Permuting rows and columns gives the same bound for any prescribed entry
 of \(A^{-1}\). It also applies to the exact optimal value of
 \(\min\{x_1:Ax=e_1,\ x\in\Q^n\}\), whose feasible set is a singleton.
 
 \medskip\noindent\textbf{Formal verification.}\enspace
-Lean~4.19.0 verifies the denominator construction on nonsingular rational
-inputs. The numerical proof takes Andrews's bound and the pointwise
-border-rank bound of \cite[Corollary~1.2]{openai} as hypotheses. At revision \texttt{b81e394},
-\texttt{./scripts/verify} builds the proof and audits its axioms.
+Lean verifies the denominator construction and derives the numerical bound
+assuming Andrews's theorem \cite[Theorem~3.4]{andrews} and the pointwise
+border-rank bound \cite[Corollary~1.2]{openai}.
 
 \begin{thebibliography}{9}
 \small
